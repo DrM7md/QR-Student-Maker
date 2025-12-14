@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مولّد QR من Excel</title>
+
+
+<script src="assets/js/fonts.js"></script>
+
+
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Excel Reader (SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- QR Code Generator -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+  <!-- PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+
+  <!-- ZIP for PNG batch -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <header class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold">مولّد QR من Excel</h1>
+        <p class="text-sm text-slate-500">يقرأ العمود A من A2 ويولّد QR ويحفظ PDF أو PNG</p>
+      </div>
+      <span class="text-xs bg-slate-100 px-3 py-1 rounded-full">Local / Offline</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+    <!-- Panel -->
+    <section class="bg-white rounded-xl border p-5 lg:col-span-1">
+      <h2 class="font-semibold mb-4">الإعدادات</h2>
+
+      <label class="block text-sm font-medium mb-2">اختر ملف Excel</label>
+      <input id="excelFile" type="file" accept=".xlsx,.xls"
+        class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg
+               file:border-0 file:text-sm file:font-semibold
+               file:bg-slate-900 file:text-white hover:file:bg-slate-700
+               border rounded-lg p-2" />
+
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1">حجم الـ QR (px)</label>
+          <input id="qrSize" type="number" value="256" min="128" max="1024"
+            class="w-full border rounded-lg p-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">هامش (margin)</label>
+          <input id="qrMargin" type="number" value="2" min="0" max="10"
+            class="w-full border rounded-lg p-2 text-sm" />
+        </div>
+
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-1">تصحيح الخطأ</label>
+          <select id="qrEC" class="w-full border rounded-lg p-2 text-sm">
+            <option value="L">L (أقل)</option>
+            <option value="M" selected>M (متوسط)</option>
+            <option value="Q">Q (أعلى)</option>
+            <option value="H">H (أعلى جدًا)</option>
+          </select>
+        </div>
+
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-1">نوع الحفظ</label>
+          <div class="flex gap-3 text-sm">
+            <label class="flex items-center gap-2">
+              <input type="radio" name="saveType" value="png" checked />
+              PNG (ZIP)
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="radio" name="saveType" value="pdf" />
+              PDF (صفحات متعددة)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-3">
+        <button id="btnGenerate"
+          class="flex-1 bg-slate-900 text-white rounded-lg py-2 text-sm font-semibold hover:bg-slate-700">
+          توليد
+        </button>
+        <button id="btnClear"
+          class="px-4 border rounded-lg py-2 text-sm font-semibold hover:bg-slate-50">
+          مسح
+        </button>
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500 leading-5">
+        <p>• لازم الأرقام تبدأ من <b>A2</b> (العمود الأول).</p>
+        <p>• القيم الفاضية/المكررة يتم تجاهلها تلقائيًا.</p>
+      </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="bg-white rounded-xl border p-5 lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold">المعاينة</h2>
+        <div class="text-sm text-slate-500">
+          <span id="countInfo">0 عنصر</span>
+        </div>
+      </div>
+
+      <div id="status" class="hidden mb-4 text-sm rounded-lg p-3"></div>
+
+      <div id="grid"
+        class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- cards injected -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-8 text-xs text-slate-500">
+    ملاحظة: إذا Excel كبير جدًا، الأفضل تقسيمه دفعات.
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

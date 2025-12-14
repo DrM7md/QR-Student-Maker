@@ -1,0 +1,14 @@
+/* بسيط: تحسين شكل الرسائل والكروت */
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+.badge {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  display: inline-block;
+}
