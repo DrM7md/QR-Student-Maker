@@ -12,3 +12,36 @@
   background: #f1f5f9;
   display: inline-block;
 }
+
+/* ========= ثيم ديناميكي (QR أسود / Barcode أزرق) ========= */
+:root{
+  --primary: #0f172a;      /* QR default (slate-900) */
+  --primaryHover: #334155; /* slate-700 */
+  --badgeBg: #f1f5f9;
+  --badgeText: #0f172a;
+}
+
+body.theme-barcode{
+  --primary: #2563eb;      /* blue-600 */
+  --primaryHover: #1d4ed8; /* blue-700 */
+  --badgeBg: #dbeafe;      /* blue-100 */
+  --badgeText: #1d4ed8;    /* blue-700 */
+}
+
+/* زر رئيسي */
+.btn-primary{
+  background: var(--primary);
+}
+.btn-primary:hover{
+  background: var(--primaryHover);
+}
+
+/* Badge في الهيدر */
+.badge-pill{
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--badgeBg);
+  color: var(--badgeText);
+  font-weight: 700;
+}
