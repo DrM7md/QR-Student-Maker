@@ -3,12 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مولّد QR من Excel</title>
+  <title>مولّد QR / Barcode من Excel</title>
 
-
-<script src="assets/js/fonts.js"></script>
-
-
+  <!-- خط PDF العربي (اختياري لكن مهم لصفحات PDF العربي) -->
+  <script src="assets/js/fonts.js"></script>
 
   <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +17,10 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- QR Code Generator -->
-<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
+  <!-- Barcode Generator (Code 128) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
   <!-- PDF -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -33,10 +34,13 @@
   <header class="bg-white border-b">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold">مولّد QR من Excel</h1>
-        <p class="text-sm text-slate-500">يقرأ العمود A من A2 ويولّد QR ويحفظ PDF أو PNG</p>
+        <h1 id="pageTitle" class="text-xl font-bold">مولّد QR / Barcode من Excel</h1>
+        <p id="pageSubtitle" class="text-sm text-slate-500">
+          يقرأ الأعمدة A,B,C من الصف A2 ويولّد QR أو Barcode ويحفظ PDF أو PNG
+        </p>
       </div>
-      <span class="text-xs bg-slate-100 px-3 py-1 rounded-full">Local / Offline</span>
+
+      <span id="modeBadge" class="text-xs badge-pill">QR</span>
     </div>
   </header>
 
@@ -52,12 +56,31 @@
                file:bg-slate-900 file:text-white hover:file:bg-slate-700
                border rounded-lg p-2" />
 
-      <div class="mt-4 grid grid-cols-2 gap-3">
+      <!-- اختيار النوع -->
+      <div class="mt-4">
+        <label class="block text-sm font-medium mb-2">نوع الكود</label>
+
+        <div class="flex gap-4 text-sm">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="codeType" value="qr" checked />
+            QR
+          </label>
+
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="codeType" value="barcode" />
+            Barcode (Code 128)
+          </label>
+        </div>
+      </div>
+
+      <!-- إعدادات QR -->
+      <div id="qrSettings" class="mt-4 grid grid-cols-2 gap-3">
         <div>
           <label class="block text-sm font-medium mb-1">حجم الـ QR (px)</label>
           <input id="qrSize" type="number" value="256" min="128" max="1024"
             class="w-full border rounded-lg p-2 text-sm" />
         </div>
+
         <div>
           <label class="block text-sm font-medium mb-1">هامش (margin)</label>
           <input id="qrMargin" type="number" value="2" min="0" max="10"
@@ -72,26 +95,55 @@
             <option value="Q">Q (أعلى)</option>
             <option value="H">H (أعلى جدًا)</option>
           </select>
+          <p class="text-xs text-slate-400 mt-1">
+            ملاحظة: QRious ما يطبّق مستوى تصحيح الخطأ فعليًا، بس خليناه للواجهة.
+          </p>
+        </div>
+      </div>
+
+      <!-- إعدادات Barcode -->
+      <div id="barcodeSettings" class="mt-4 grid grid-cols-2 gap-3 hidden">
+        <div>
+          <label class="block text-sm font-medium mb-1">عرض الخط (Bar Width)</label>
+          <input id="barWidth" type="number" value="2" min="1" max="4"
+            class="w-full border rounded-lg p-2 text-sm" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">الارتفاع (Height)</label>
+          <input id="barHeight" type="number" value="60" min="20" max="150"
+            class="w-full border rounded-lg p-2 text-sm" />
         </div>
 
         <div class="col-span-2">
-          <label class="block text-sm font-medium mb-1">نوع الحفظ</label>
-          <div class="flex gap-3 text-sm">
-            <label class="flex items-center gap-2">
-              <input type="radio" name="saveType" value="png" checked />
-              PNG (ZIP)
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="radio" name="saveType" value="pdf" />
-              PDF (صفحات متعددة)
-            </label>
-          </div>
+          <label class="flex items-center gap-2 text-sm font-medium">
+            <input id="showText" type="checkbox" checked />
+            إظهار الرقم تحت الباركود
+          </label>
+          <p class="text-xs text-slate-400 mt-1">
+            الأفضل للخلفية تكون بيضاء عشان قارئ الليزر يلقط بسرعة.
+          </p>
+        </div>
+      </div>
+
+      <!-- نوع الحفظ -->
+      <div class="mt-4">
+        <label class="block text-sm font-medium mb-1">نوع الحفظ</label>
+        <div class="flex gap-3 text-sm">
+          <label class="flex items-center gap-2">
+            <input type="radio" name="saveType" value="png" checked />
+            PNG (ZIP)
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="radio" name="saveType" value="pdf" />
+            PDF
+          </label>
         </div>
       </div>
 
       <div class="mt-5 flex gap-3">
         <button id="btnGenerate"
-          class="flex-1 bg-slate-900 text-white rounded-lg py-2 text-sm font-semibold hover:bg-slate-700">
+          class="flex-1 btn-primary text-white rounded-lg py-2 text-sm font-semibold">
           توليد
         </button>
         <button id="btnClear"
@@ -101,7 +153,8 @@
       </div>
 
       <div class="mt-4 text-xs text-slate-500 leading-5">
-        <p>• لازم الأرقام تبدأ من <b>A2</b> (العمود الأول).</p>
+        <p>• لازم البيانات تبدأ من <b>A2</b>.</p>
+        <p>• الأعمدة: <b>A</b> الرقم، <b>B</b> الاسم، <b>C</b> الصف/الشعبة (مثال 07/1).</p>
         <p>• القيم الفاضية/المكررة يتم تجاهلها تلقائيًا.</p>
       </div>
     </section>
@@ -117,8 +170,7 @@
 
       <div id="status" class="hidden mb-4 text-sm rounded-lg p-3"></div>
 
-      <div id="grid"
-        class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div id="grid" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <!-- cards injected -->
       </div>
     </section>
